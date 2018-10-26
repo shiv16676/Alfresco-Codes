@@ -1,0 +1,12 @@
+1. Lucene query to find folder with name 'Space Templates' under Company Home?  
++PATH:"/app:company_home//* " AND +@cm\:name:"Space Templates" AND TYPE:"cm:folder"
+
+2. Lucene query to find how many nodes have a specific aspect applied?
+ASPECT:"sgsm:signedsmacdocument"
+
+3. How to find all nodes which have a particular text in them?
+TEXT:"test"
+
+4. How to find a folder which has a specific description?
++PATH:"/app:company_home//* " AND +@cm\:description:"<description>"
+
