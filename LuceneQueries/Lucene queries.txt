@@ -1,12 +1,67 @@
 1. Lucene query to find folder with name 'Space Templates' under Company Home?  
-+PATH:"/app:company_home//* " AND +@cm\:name:"Space Templates" AND TYPE:"cm:folder"
+Ans: +PATH:"/app:company_home//* " AND +@cm\:name:"Space Templates" AND TYPE:"cm:folder"
 
 2. Lucene query to find how many nodes have a specific aspect applied?
-ASPECT:"sgsm:signedsmacdocument"
+Ans: ASPECT:"abcd:BlahBlahdocument"
 
 3. How to find all nodes which have a particular text in them?
-TEXT:"test"
+Ans: TEXT:"test"
 
 4. How to find a folder which has a specific description?
-+PATH:"/app:company_home//* " AND +@cm\:description:"<description>"
+Ans: +PATH:"/app:company_home//* " AND +@cm\:description:"<description>"
+
+5. How to execute a FTS query in Javascript console?
+Ans: Use below snippet for it-
+
+var query = 'TYPE:"abcd:BlahBlahFolder" AND @abcd:propName:"XYZ"';
+
+	var def = {
+		query: query,
+		store: "workspace://SpacesStore",
+		language: "fts-alfresco",
+	}
+
+var result = search.query(def);
+logger.log("result------->" + result.length);
+
+6. How to update any date property of a document in alfresco?
+Ans: Using below snippet we can achive this-
+
+var node = search.findNode('workspace://SpacesStore/4bbaa750-70cd-4781-a146-30c9e7122430');
+var modifedDate = new Date(2022, 10, 02);
+print(modifedDate);
+node.properties["abcd:BlahBlahdocumentDate"] = modifedDate;
+node.save();
+
+7. Write query to work with groups in alfresco?
+Ans: Use below snippet to work with groups in alfresco-
+
+var ctxt, authorities, authorityService;
+ctxt = Packages.org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext();
+authorityService = ctxt.getBean('authorityService', Packages.org.alfresco.service.cmr.security.AuthorityService);
+
+authorities = authorityService.findAuthorities(Packages.org.alfresco.service.cmr.security.AuthorityType.GROUP,null, false, 
+												   '<GROUP_NAME>', null);
+logger.log(authorities);
+logger.log(authorityService.getShortName(authorities));
+
+8. How to delete a property from a document in alfresco?
+Ans: Using below JS code snippet-
+
+
+var node = search.findNode("workspace://SpacesStore/e78f80e4-2aa5-41db-9ef8-9ae90d8b64fd");
+print(node);
+delete node.properties["abcd:BlahBlahdocument"];
+node.save();
+
+9. How to remove an aspect from a document in alfresco?
+Ans: Using below JS code snippet-
+
+var node = search.findNode('workspace://SpacesStore/e78f80e4-2aa5-41db-9ef8-9ae90d8b64fd');
+node.removeAspect('abcd:BlahBlahdocumentAspect');
+node.save();
+logger.log('aspect is removed..');
+
+
+
 
