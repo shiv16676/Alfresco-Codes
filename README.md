@@ -1,2 +1,2 @@
 # Alfresco-Codes
-This is the repository to maintain the Alfresco code that i will be practicing time by time.
+This is the repository to maintain the Alfresco's frequently used code that i will be updating time by time.
