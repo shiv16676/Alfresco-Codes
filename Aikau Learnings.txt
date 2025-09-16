@@ -1,0 +1,103 @@
+1. Technical overview of Aikau UI components:
+----------------------------------------------
+abc.get.desc.xml: Descriptor file for the Aikau UI page. Primarily defines the URI and routing.
+abc.get.html.ftl: Freemarker template for the view layer. Defines the HTML structure of the page
+abc.get.js: Aikau Main controller script. Initializes widgets, handles logic, and wires up the page.
+abc-search.lib.js: Aikau lib file which have widgets information and will be imported in main controller file.
+AbcService.js: Backend service logic. Manages API calls and handles pub/sub topic subscriptions.
+
+each control can have a pubsubscope
+set of controls can have pubsubscope
+entire form can have pubsubscope
+
+- How does the Aikau page loaded?
+----------------------------------
+[User Request]
+      ↓
+abc.get.desc.xml
+(Defines URI and routing)
+      ↓
+abc.get.html.ftl
+(Loads Freemarker template)
+      ↓
+abc.get.js
+(Controller initializes widgets)
+      ↓
+abc-search.lib.js
+(Provides widget definitions)
+      ↓
+AbcService.js
+(Handles backend logic, pub/sub)
+      ↓
+Widgets Rendered
+(Dynamic UI with real-time updates)
+
+- How to enable debug logging for Aikau in alfresco?
+----------------------------------------------------
+log4j.logger.org.alfresco.web.site=DEBUG
+log4j.logger.org.alfresco.web.scripts=DEBUG
+
+Wrapping a JQuery Widget
+https://hub.alfresco.com/t5/alfresco-content-services-blog/aikau-mini-examples-8211-wrapping-a-jquery-widget/ba-p/287775
+
+- Example of a widget config:
+
+var abc = {
+  name: "customForms/forms/controls/CustomSelect",
+  config: {
+    fieldId: "DOC_LEVEL_CATEGORY", // Unique ID for the form field
+    label: msg.get("doc.category"), // Fetches label text (similar to ${msg("doc.category")} in YUI)
+    name: "Doc_Category_Audit_Trial", // Internal name used in form submission
+    placeHolder: "Select Doc Category", // Placeholder text in the dropdown
+    publishOnEmptyValue: true, // Publishes even if no value is selected
+    additionalCssClasses: "restrict-text-180", // Custom styling class
+    forceWidth: true, // Forces widget width to match container
+    validationErrorAltText: "This is mandatory field", // Tooltip for validation error
+    showSelectAll: false, // Hides "Select All" option
+
+    // 🔒 Disablement Logic: Hides the widget visually but keeps it in DOM
+    disablementConfig: {
+      initialValue: true,
+      rules: [
+        {
+          targetId: "DOC_LEVEL",
+          is: ["", 1, 2, 3, 4]
+        }
+      ]
+    },
+
+    // 🚫 Visibility Logic: Completely removes widget from DOM
+    visibilityConfig: {
+      initialValue: true,
+      rules: [
+        {
+          targetId: "DOC_LEVEL",
+          is: ["", 5]
+        }
+      ]
+    },
+
+    // 🔁 Auto Reset Logic: Resets field value based on rule evaluation
+    autoSetConfig: [
+      {
+        rulePassValue: "",
+        ruleFailValue: "/",
+        rules: [
+          {
+            targetId: "DOC_LEVEL"
+          }
+        ]
+      }
+    ],
+
+    // ✅ Requirement Logic: Marks field as mandatory or optional
+    requirementConfig: {
+      initialValue: true
+    },
+
+    // 📋 Options Logic: Defines dropdown values
+    optionsConfig: {
+      fixed: arrOfDocCategoryOption // Static list of values; can also use publishPayload
+    }
+  }
+};
