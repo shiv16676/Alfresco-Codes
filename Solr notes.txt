@@ -1,0 +1,89 @@
+Alfresco Search services 2.0:
+
+	a. Introduction:
+
+	- ACS uses alfresco search service with Solr-6 as the default search service index, providing an efficient search functionality.
+	
+	- If ACS and ASS both are deployed on the same server, then we don't need any additional subscription and ACS subscription will cover this However if we want to deploy search services to a separate server, then a separate Alfresco search & Insight Engine subscription will be required.
+	
+	- The Lucene search sub-system is not supported in Alfresco Content Services.
+
+	- It fully supports aspects, properties, ACLs, and Custom Metadata. It also supports SQL queries for reporting on the Solr data store using JDBC, and the dashboard comes pre-configured with some common reports.
+	
+	- Alfresco Insight Zeppelin is built on top of Apache Zeppelin 0.8.2 and comes bundled as a report builder.
+	
+	- Currently ASS-2.0 do not support the following:-
+	
+		a. Alfresco Process Services
+		b. Multi-tenancy
+		c. Reporting on audit and activity feeds from ACS
+	
+	a. Solr overview: (https://docs.alfresco.com/insight-engine/latest/install/)
+	
+	- Installing Search and Insight Engine introduces additional features, including new sharding methods and sharding with SSL. Mutual TLS is not just used to encrypt data in transit, it is also used as an authentication mechanism between the repository and Search and Insight Engine.
+	
+	- We must install ACS-6.2+ before installing ASS.
+	
+	- ASS installation options: Distribution Zip/Docker Compose
+	
+	- Solr mainly have two cores: alfresco searches for stores live data and archive core which searches for the data that has been deleted from the system.
+
+	- Eventual Consistency: If the index engine is up-to-date, then query against database OR Index engine will produce the same results. However, if the index engine is not up-to-date with the repository, then query results will be different when compared with DB v/s Index engine. This behavior of data consistency between Index engine and ACS is called Eventual consistency.
+	
+	- Changes could be: nodes created in repository, nodes deleted in repository, metadata updates, content updates, Both metadata and content updates, ACLs updates for the nodes, etc.
+	
+	- Some operations such as MOVE and RENAME which requires structural changes are indexed in the background.
+
+	b. Installation Options: Below are the options to install ASS-
+	
+	- Install with Mutual TLS (zip)
+	- Install without Mutual TLS -HTTP with secret word (zip)
+	- Install with Docker compose.
+	
+	
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+					<============    Solr sharding and different methodologies		============> 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Ques# 1: What is Solr Sharding & why do we need it?
+	- Solr sharding means we are splitting our Single Solr index into multiple parts, which can be stored on different machines. This is required when we have large amount of data to be indexed.
+	
+Ques# 2: When should we go for Solr Sharding? What is the best practices around it?
+	- When we have 50 million+ documents in the repository, we should go for Sharding.
+
+Ques# 3: What is the history behind Solr sharding?
+
+	- Before Alfresco v4.0: Alfresco used Apache Lucene as search engine   (Horizontal scalability only possible with number of Alfresco instances)
+	- Alfresco v4.0(+):  Alfresco integrated Apache Solr as search engine  (Independent Scalability of search engine is possible here)
+	- Alfresco v5.1(+): Concept of Solr sharding was introduced and only sharding method supported was thru ACL_ID.
+	- Alfresco v5.2.0(+):  Sharding method supported is DB_ID, DATE & any custom text field.
+	- Alfresco v5.2.1(+):  Sharding method supported is DB_ID_RANGE.
+
+Ques # 4: What file changes will be required to configure DB_ID_RANGE sharding?
+	- solrcore.properties file will be updated with following property value (shard.method = DB_ID_RANGE)
+	- If we provide any invalid shard method, then System will fall back to the DBID routing.
+
+Ques # 5: How to delete existing Solr indexes which was created using DB_ID methodology?
+	- We have below API that can be used for this-
+	
+	https://<hostnameN>:8983/solr/admin/cores?action=removeCore&storeRef=workspace://SpacesStore&coreName=alfresco
+	
+Ques# 6: How to create a shard using DB_ID_RANGE methodology?
+	- We can use below API call-
+	
+	http://<solr.host>:8983/solr/admin/cores?action=newCore&coreName=alfresco&storeRef=workspace://SpacesStore&numShards=10&numNodes=1&nodeInstance=1&template=rerank&shardIds=0&property.shard.method=DB_ID_RANGE&property.shard.range=0-1000000&property.shard.instance=0&property.alfresco.host=<tracker.host>&property.alfresco.port=8080&property.data.dir.root=/software/alfresco/alfresco-search-services/indexes/workspace-SpacesStore
+	
+	- Where,
+	solr.host = IP address of Solr node
+	numShards = Maximum no of different Shards that can be created. Once this limit is defined, we can't extend it. So, we should keep some margin.
+	property.shard.method = which sharding methodology to use (DB_ID_RANGE in our case)
+	property.shard.range = It is the range of DBIDs to be included. (e.g. 0-1000000). Based on the data size, we are deciding which 
+	property.alfresco.host = IP of either tracker node OR repository node depends on environment architecture. 
+
+Ques# 7: Difference between DB_ID and DB_ID_RANGE sharding methodology?
+	- In DB_ID_RANGE methodology, at any given time, indexing (write operation) will happen on only one shard and the search results (read operation) are collated from multiple shards However in case of DB_ID methodology the write operation will be split across multiple shards.
+
+Ques# 8: References?
+	- https://www.dbi-services.com/blog/solr-sharding-shard-creation/
+	- https://hub.alfresco.com/t5/alfresco-content-services-blog/index-sharding/ba-p/287377
+
